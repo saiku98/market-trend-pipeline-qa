@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Data
+*.db
+*.sqlite3
+*.parquet
+data/raw/
+data/processed/
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Java
+target/
+*.class
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Env
+.env
