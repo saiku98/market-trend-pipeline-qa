@@ -1,0 +1,6 @@
+requests>=2.31
+pandas>=2.1
+streamlit>=1.32
+# pyspark is optional locally: the pandas engine (default) covers CI and
+# local development. Install pyspark separately if running --engine spark
+# against a real cluster.
