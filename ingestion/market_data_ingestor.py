@@ -14,10 +14,10 @@ import argparse
 import logging
 import sqlite3
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterable
 
 import requests
 
@@ -98,7 +98,7 @@ class MarketDataIngestor:
         raise last_exc
 
     def _parse(self, payload: dict) -> list[PricePoint]:
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         points: list[PricePoint] = []
         for asset in self.assets:
             entry = payload.get(asset)
