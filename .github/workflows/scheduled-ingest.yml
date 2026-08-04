@@ -1,0 +1,24 @@
+name: Scheduled ingest snapshot
+
+# Illustrative only: in a real deployment the ingestor runs as a long-lived
+# process (e.g. a small worker/container), not as a scheduled Action. This
+# workflow demonstrates the --once flag for a periodic snapshot use case.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python -m ingestion.market_data_ingestor --once --db-path data/market_data.db --verbose
+      - uses: actions/upload-artifact@v4
+        with:
+          name: market-data-snapshot
+          path: data/market_data.db

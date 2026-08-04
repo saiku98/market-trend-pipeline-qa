@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+          pip install pandas
+
+      - name: Lint (ruff)
+        run: |
+          pip install ruff
+          ruff check .
+
+      - name: Run unit tests
+        run: pytest -v --junitxml=pytest-report.xml
+
+      - name: Build a sample warehouse and run the pipeline end-to-end
+        run: |
+          python -m warehouse.loader --db-path data/ci_smoke.db
+          python - <<'PY'
+          import sqlite3
+          from datetime import datetime, timedelta, timezone
+          conn = sqlite3.connect("data/ci_smoke.db")
+          base = datetime.now(timezone.utc)
+          rows = [
+              ("bitcoin", 50000 + i * 25, (base + timedelta(minutes=i)).isoformat())
+              for i in range(6)
+          ]
+          conn.executemany(
+              "INSERT INTO raw_prices (asset, price_usd, observed_at) VALUES (?, ?, ?)", rows
+          )
+          conn.commit()
+          PY
+          python spark_jobs/trend_forecast.py --db-path data/ci_smoke.db --engine pandas
+          python -m validation.python.checks --db-path data/ci_smoke.db
+          python reports/daily_report_generator.py --db-path data/ci_smoke.db --out reports/output/ci_report.html
+
+      - name: Upload test & report artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-artifacts
+          path: |
+            pytest-report.xml
+            reports/output/ci_report.html
+
+  java-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Run Java validation tests
+        working-directory: validation/java
+        run: mvn -B test
