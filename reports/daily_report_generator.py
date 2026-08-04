@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import argparse
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from string import Template
 
@@ -86,10 +86,10 @@ def generate_report(db_path: Path) -> str:
     )
 
     return REPORT_TEMPLATE.substitute(
-        report_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        report_date=datetime.now(UTC).strftime("%Y-%m-%d"),
         trend_table=trend_table,
         dq_table=dq_table,
-        generated_at=datetime.now(timezone.utc).isoformat(),
+        generated_at=datetime.now(UTC).isoformat(),
     )
 
 
