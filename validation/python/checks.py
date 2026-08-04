@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 QUERIES_DIR = Path(__file__).resolve().parents[2] / "warehouse" / "queries"
@@ -111,7 +111,7 @@ def run_all_checks(db_path: Path, *, freshness_minutes: int = 60) -> list[CheckR
 
 
 def _log_results(db_path: Path, results: list[CheckResult]) -> None:
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     with sqlite3.connect(db_path) as conn:
         conn.executemany(
             """
